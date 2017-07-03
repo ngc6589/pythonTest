@@ -8,6 +8,9 @@ moode audio player しばりになりますが、再生中の曲情報などを 
 
 *当スクリプトは python 2.7 で動作確認しています*  
 
+$ git clone https://github.com/ngc6589/moodeAudioPlayer_OLED_Display.git  
+で、お使いのラズパイにいれてください。
+
 ## ■対応するプレーヤソフト  
 
 Moode Audio Player  
@@ -17,7 +20,7 @@ Moode Audio Player
 /var/local/www/currentsong.txt のメタデータファイル作成可能なバージョンであれば
 問題なく動くと思われます。
 
-ブラウザから moode audio player の画面を開いて、設定→ｘｘｘｘｘ を有効にしてください。
+ブラウザから moode audio player の設定画面を開いて、currentsong.txt 更新を有効にしてください。
 
 
 ## ■使用した OLED モジュール  
@@ -43,6 +46,8 @@ $ cd Adafruit_Python_SSD1306
 $ sudo python setup.py install
 ```
 
+
+raspi-config から SPI を有効にするのも忘れないでください
 
 
 
@@ -89,3 +94,10 @@ font12 = ImageFont.truetype('/home/pi/PixelMplus12-Regular.ttf', 12, encoding='u
 nohup python /home/pi/oled.py > /dev/null 2>&1 &  
 
 
+## ■ヘルパースクリプト  
+
+/mnt/SDCARD 配下に入れた楽曲のフォルダを参照してフォルダ毎にプレイリストファイルを生成するスクリプトです。
+プレイリストファイルは、/var/lib/mpd/playlists ディレクトリに出力します。
+
+
+ 

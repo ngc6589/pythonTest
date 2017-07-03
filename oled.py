@@ -64,6 +64,23 @@ icon3 = [
     '  *********      *********      *********      *********  '
     ]
 
+icon4 = [
+    '                                                          ',
+    '  *********      *********      *********      *********  ',
+    ' *         *    *         *    *         *    *         * ',
+    '*           *  *           *  *    ***    *  *           *',
+    '*     *     *  *           *  *   *****   *  *           *',
+    '*    * *    *  * *       * *  *  *******  *  *           *',
+    '*   *   *   *  *  *     *  *  * ********* *  *           *',
+    '*  *     *  *  *   *   *   *  * ********* *  *           *',
+    '* *       * *  *    * *    *  * ********* *  *           *',
+    '*           *  *     *     *  *  *******  *  *           *',
+    '*           *  *           *  *   *****   *  *           *',
+    '*           *  *           *  *    ***    *  *           *',
+    ' *         *    *         *    *         *    *         * ',
+    '  *********      *********      *********      *********  '
+    ]
+
 
 icon1ysize = len(icon1)
 icon1xsize = len(icon1[0])
@@ -91,6 +108,15 @@ for y in range(icon3ysize):
     for x in range(icon3xsize):
         if char01[x] != ' ':
             icon3image.putpixel((x, y), 1)
+
+icon4ysize = len(icon4)
+icon4xsize = len(icon4[0])
+icon4image = Image.new('1', (icon4xsize, icon4ysize))
+for y in range(icon4ysize):
+    char01 = icon4[y]
+    for x in range(icon4xsize):
+        if char01[x] != ' ':
+            icon4image.putpixel((x, y), 1)
 
 iconMode = 0
 
@@ -134,14 +160,14 @@ image = Image.new('1', (width, height))
 draw = ImageDraw.Draw(image)
 
 # 日本語フォントの登録
-font12 = ImageFont.truetype('/home/pi/python/PixelMplus12-Regular.ttf', 12, encoding='unic')
+font12 = ImageFont.truetype('/home/pi/PixelMplus12-Regular.ttf', 12, encoding='unic')
 
 # 変数
 scrollCount = 0
 rowCount = 0
 
 try:
-    
+
     while True:
 
         # Draw a black filled box to clear the image.
@@ -219,7 +245,7 @@ try:
         # アルバム文字列をキャンバスに貼る
         region = albumImageWK.crop((0, 0, 120, 12))
         image.paste(region,(8, 25))
-    
+
         # アーティスト文字列をキャンバスに貼る
         region = artistImageWK.crop((0, 0, 120, 12))
         image.paste(region,(8, 37))
@@ -230,7 +256,7 @@ try:
         btnBstatus = GPIO.input(btnB)
         btnCstatus = GPIO.input(btnC)
         btnDstatus = GPIO.input(btnD)
-        
+
         if btnPress == True:
             if btnAstatus == 1 and btnBstatus == 1 and btnCstatus == 1 and btnDstatus == 1:
                 btnPress = False
@@ -267,13 +293,24 @@ try:
                 elif btnCstatus == 0:
                     #電源オフ
                     os.system('sudo poweroff')
-                
+
+            elif btnMode == 3:
+                if btnAstatus == 0:
+                    #上のファイル
+                    pass
+                elif btnBstatus ==0:
+                    #下のファイル
+                    pass
+                elif btnCstatus == 0:
+                    #プレイリスト決定
+                    pass
+
             if btnDstatus == 0:
                 btnMode = btnMode + 1
-                if btnMode > 2:
+                if btnMode > 3:
                     btnMode = 0
-            
-                    
+
+
         # ボタンアイコンを画面に貼る
         if btnMode == 0:
             region = icon1image.crop((0, 0, icon1xsize, icon1ysize))
@@ -284,12 +321,15 @@ try:
         if btnMode == 2:
             region = icon3image.crop((0, 0, icon3xsize, icon3ysize))
             image.paste(region,(0, 50))
-        
-    
+        if btnMode == 3:
+            region = icon4image.crop((0, 0, icon4xsize, icon4ysize))
+            image.paste(region,(0, 50))
+
+
         # OLED に出力
         disp.image(image)
         disp.display()
-        time.sleep(0.1)
+        time.sleep(0.15)
 
 
 except KeyboardInterrupt:
@@ -299,4 +339,3 @@ except KeyboardInterrupt:
 #
 # python 入門者のコードのため冗長な書き方が多いです。
 # Written by Masahiro Kusunoki http://mkusunoki.net http://em9system.net
-#
