@@ -120,7 +120,6 @@ for y in range(icon4ysize):
 
 iconMode = 0
 
-#
 # Input pins:
 btnA = 17
 btnB = 27
@@ -165,6 +164,7 @@ font12 = ImageFont.truetype('/home/pi/PixelMplus12-Regular.ttf', 12, encoding='u
 # 変数
 scrollCount = 0
 rowCount = 0
+loopCount = 0
 
 try:
 
@@ -247,7 +247,16 @@ try:
             image.paste(region,(8, 37))
         else:
             # プレイリストを描画
-            pass
+            maxPages = len(fileNames) / 4
+            for i in range(4):
+                if numFileNames > (displayPageNum * 4 + i):
+                    str01 = fileNames[displayPageNum * 4 + i]
+                    str01 = str01.decode('UTF8')
+                    if displayLineNum == i:
+                        draw.text((0, i * 12), "* " + str01, font=font12, fill=255)
+                    else:
+                        draw.text((0, i * 12), "  " + str01, font=font12, fill=255)
+                                
 
         # ボタン押されている間は処理スキップ
         btnAstatus = GPIO.input(btnA)
@@ -312,7 +321,12 @@ try:
                                 displayPageNum = displayPageNum + 1
                 elif btnCstatus == 0:
                     #プレイリスト決定
-                    print absFileNames[displayPageNum * 4 + displayLineNum]
+                    (file,ext) = os.path.splitext(fileNames[displayPageNum * 4 + displayLineNum])
+                    str01 = "mpc load " + "'" + file + "'"
+                    os.system('mpc clear')
+                    os.system(str01)
+                    os.system('mpc play')
+                    #print str01
 
             if btnDstatus == 0:
                 btnMode = btnMode + 1
@@ -320,15 +334,6 @@ try:
                 if btnMode == 3:
                     displayPageNum = 0
                     displayLineNum = 0
-                    for path, dir, file in os.walk('/var/lib/mpd/playlists'):
-                        fileNames = []
-                        absFileNames = []
-                        for fname in file:
-                            fileNames.append(fname)
-                            absFileNames.append(os.path.join(path, fname))
-                        fileNames.sort()
-                        absFileNames.sort()
-                        numFileNames = len(fileNames)
                 if btnMode > 3:
                     btnMode = 0
         # 
@@ -346,10 +351,26 @@ try:
             region = icon4image.crop((0, 0, icon4xsize, icon4ysize))
             image.paste(region,(0, 50))
 
+
+        # 一定時間ごとに/var/lib/mpd/playlists ファイル一覧を更新する
+        if loopCount == 0:
+            for path, dir, file in os.walk('/var/lib/mpd/playlists'):
+                fileNames = []
+                absFileNames = []
+                for fname in file:
+                    fileNames.append(fname)
+                    absFileNames.append(os.path.join(path, fname))
+                    fileNames.sort()
+                    absFileNames.sort()
+                    numFileNames = len(fileNames)
+            
         # OLED に出力
         disp.image(image)
         disp.display()
         time.sleep(0.15)
+        loopCount = loopCount + 1
+        if loopCount > 1000:
+            loopCount = 0
 
 except KeyboardInterrupt:
     GPIO.cleanup()
