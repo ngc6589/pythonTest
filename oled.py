@@ -69,13 +69,13 @@ icon4 = [
     '  *********      *********      *********      *********  ',
     ' *         *    *         *    *         *    *         * ',
     '*           *  *           *  *    ***    *  *           *',
-    '*     *     *  *           *  *   *****   *  *           *',
-    '*    * *    *  * *       * *  *  *******  *  *           *',
-    '*   *   *   *  *  *     *  *  * ********* *  *           *',
-    '*  *     *  *  *   *   *   *  * ********* *  *           *',
-    '* *       * *  *    * *    *  * ********* *  *           *',
-    '*           *  *     *     *  *  *******  *  *           *',
-    '*           *  *           *  *   *****   *  *           *',
+    '*     *     *  *           *  *   *   *   *  *           *',
+    '*    * *    *  * *       * *  *  *     *  *  *           *',
+    '*   *   *   *  *  *     *  *  * *       * *  *           *',
+    '*  *     *  *  *   *   *   *  * *       * *  *           *',
+    '* *       * *  *    * *    *  * *       * *  *           *',
+    '*           *  *     *     *  *  *     *  *  *           *',
+    '*           *  *           *  *   *   *   *  *           *',
     '*           *  *           *  *    ***    *  *           *',
     ' *         *    *         *    *         *    *         * ',
     '  *********      *********      *********      *********  '
@@ -230,26 +230,24 @@ try:
 
             lastModTImeSave = lastModTimeNow
 
-
-        # タイトル文字イメージを OLED 用キャンバスに貼り付け
-        region = titleImage.crop((0, scrollCount + 0, 120, scrollCount + 24))
-        image.paste(region,(8, 0))
-
-        # スクロール終了位置判定
-        # カウンターの範囲をみて、スクロールしないタイミングなど実装すると見やすくなるかも
-        scrollCount = scrollCount + 1
-        if scrollCount > (rowCount + 2) * 12:
-            scrollCount = 0
-
-
-        # アルバム文字列をキャンバスに貼る
-        region = albumImageWK.crop((0, 0, 120, 12))
-        image.paste(region,(8, 25))
-
-        # アーティスト文字列をキャンバスに貼る
-        region = artistImageWK.crop((0, 0, 120, 12))
-        image.paste(region,(8, 37))
-
+        if btnMode != 3:
+            # タイトル文字イメージを OLED 用キャンバスに貼り付け
+            region = titleImage.crop((0, scrollCount + 0, 120, scrollCount + 24))
+            image.paste(region,(8, 0))
+            # スクロール終了位置判定
+            # カウンターの範囲をみて、スクロールしないタイミングなど実装すると見やすくなるかも
+            scrollCount = scrollCount + 1
+            if scrollCount > (rowCount + 2) * 12:
+                scrollCount = 0
+            # アルバム文字列をキャンバスに貼る
+            region = albumImageWK.crop((0, 0, 120, 12))
+            image.paste(region,(8, 25))
+            # アーティスト文字列をキャンバスに貼る
+            region = artistImageWK.crop((0, 0, 120, 12))
+            image.paste(region,(8, 37))
+        else:
+            # プレイリストを描画
+            pass
 
         # ボタン押されている間は処理スキップ
         btnAstatus = GPIO.input(btnA)
@@ -260,6 +258,7 @@ try:
         if btnPress == True:
             if btnAstatus == 1 and btnBstatus == 1 and btnCstatus == 1 and btnDstatus == 1:
                 btnPress = False
+        # ボタン判定
         else:
             if btnMode == 0:
                 if btnAstatus == 0:
@@ -271,7 +270,6 @@ try:
                 elif btnCstatus == 0:
                     #ミュート
                     os.system('mpc volume 0')
-
             elif btnMode == 1:
                 if btnAstatus == 0:
                     #再生
@@ -282,7 +280,6 @@ try:
                 elif btnCstatus == 0:
                     #停止
                     os.system('mpc stop')
-
             elif btnMode == 2:
                 if btnAstatus == 0:
                     #もどる
@@ -293,24 +290,48 @@ try:
                 elif btnCstatus == 0:
                     #電源オフ
                     os.system('sudo poweroff')
-
             elif btnMode == 3:
                 if btnAstatus == 0:
                     #上のファイル
-                    pass
+                    if displayPageNum == 0 and displayLineNum == 0:
+                        pass
+                    else:
+                        displayLineNum = displayLineNum - 1
+                        if displayLineNum < 0:
+                            displayLineNum = 3
+                            displayPageNum = displayPageNum - 1
                 elif btnBstatus ==0:
                     #下のファイル
-                    pass
+                    if (displayPageNum * 4 + displayLineNum + 1) < numFileNames:
+                        displayLineNum = displayLineNum + 1
+                        if displayLineNum > 3:
+                            if displayPageNum  == maxPages:
+                                displayLineNum = 3
+                            else:
+                                displayLineNum = 0
+                                displayPageNum = displayPageNum + 1
                 elif btnCstatus == 0:
                     #プレイリスト決定
-                    pass
+                    print absFileNames[displayPageNum * 4 + displayLineNum]
 
             if btnDstatus == 0:
                 btnMode = btnMode + 1
+                # プレイリスト選択モードに入るときには、ファイル一覧を更新する
+                if btnMode == 3:
+                    displayPageNum = 0
+                    displayLineNum = 0
+                    for path, dir, file in os.walk('/var/lib/mpd/playlists'):
+                        fileNames = []
+                        absFileNames = []
+                        for fname in file:
+                            fileNames.append(fname)
+                            absFileNames.append(os.path.join(path, fname))
+                        fileNames.sort()
+                        absFileNames.sort()
+                        numFileNames = len(fileNames)
                 if btnMode > 3:
                     btnMode = 0
-
-
+        # 
         # ボタンアイコンを画面に貼る
         if btnMode == 0:
             region = icon1image.crop((0, 0, icon1xsize, icon1ysize))
@@ -325,12 +346,10 @@ try:
             region = icon4image.crop((0, 0, icon4xsize, icon4ysize))
             image.paste(region,(0, 50))
 
-
         # OLED に出力
         disp.image(image)
         disp.display()
         time.sleep(0.15)
-
 
 except KeyboardInterrupt:
     GPIO.cleanup()
